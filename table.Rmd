@@ -1,0 +1,334 @@
+---
+title: "ESMARConf presentation"
+author: Aaron Conway
+subtitle: "'Graphical' study characteristics table for a systematic review"
+output: officedown::rdocx_document
+---
+
+<!--The code to produce the table is broken down into chunks to explain the steps, which you can step through and see the output at each stage. Only the final chunk with all the code will be included when knitting the rmarkdown document-->
+
+```{r setup, include=FALSE, echo=FALSE, message=FALSE}
+knitr::opts_chunk$set(include=FALSE, echo = FALSE, message=FALSE)
+library(magrittr)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(glue)
+library(here)
+library(officer)
+library(flextable)
+```
+
+
+```{r eval=TRUE}
+data <- readr::read_csv("sr_data.csv")
+```
+
+
+```{r include=TRUE}
+
+# Code in this chunk is reformatting the dataframe in preparation for display in the table
+
+data <- data %>% 
+    dplyr::arrange(study) %>% 
+    tidyr::separate(study, c("Study", "Year"), sep = " ")  %>% # makes separate columns for year and first author (study)
+    dplyr::arrange(-as.numeric(Year)) %>% # arrange the table so that studies from most recent years are first
+    dplyr::mutate(perc_male = round((male/(female+male))*100, 1)) %>% #makes a column with the percentage of males from two columns that have the total number of male and females included in studies
+  # this mutate call creates a new column for age using the glue package to achieve different formatting for integrating summary statistics according to whether they were reported as mean (sd), mean (min to max), median [min to max], [min to max] or median [lower IQR, upper IQR].
+    dplyr::mutate(age = dplyr::case_when(
+      !is.na(age_mean) & !is.na(age_sd)~ glue::glue("{age_mean} ({age_sd})"),
+      !is.na(age_mean) & !is.na(age_min)~ glue::glue("{age_mean} ({age_min} to {age_max})*"),
+      !is.na(age_median) & !is.na(age_min)~ glue::glue("{age_median} [{age_min} to {age_max}]*"),
+      is.na(age_median) & is.na(age_median) & !is.na(age_min)~ glue::glue("[{age_min} to {age_max}]"),
+      !is.na(age_median) & !is.na(age_loweriqr) ~ glue::glue("{age_median} [{age_loweriqr}, {age_upperiqr}]")
+    )) %>% 
+  # create duplicate columns for participants and measurements so that we can include the exact number as well as an inline image
+    dplyr::mutate(n1=participants) %>% 
+    dplyr::mutate(N1=measurements) %>% 
+  # select just the columns we want to display in the table
+    dplyr::select(Year, Study, code,  perc_male, age, group, 
+           setting, cnap, location, participants, n1,
+           measurements,N1) %>%
+  # nicer content formatting for cells in one of the columns that distinguishes if more than one 'group' was included in an individual study
+    dplyr::mutate(group = dplyr::case_when(group == "primary" ~ "",
+                             group == "afib" ~ "Atrial fibrillation",
+                             group == "sr" ~ "Sinus Rhythm"))
+```
+
+
+```{r}
+# initiate the flextable
+ft <- data %>% flextable::flextable()
+ft
+```
+
+
+```{r }
+# adds a 'minibar' to show the ratio of male/female in each study
+   ft <- ft %>% 
+  flextable::compose( j="perc_male", value = flextable::as_paragraph(
+      flextable::minibar(value =   perc_male , max=100,
+              barcol = "#8edaff",
+              bg = "#ff8ea2",)
+    ),
+    part = "body")
+ft
+```
+
+
+```{r }
+# switches the country column to the corresponding flag (we use the flagon package to access flags: https://coolbutuseless.github.io/2020/04/03/introducing-flagon-a-package-of-just-flag-images-in-png-and-svg-format/)  
+ft <- ft %>%
+  flextable::compose(i=~code=="AUS", j = "code",
+            value = flextable::as_paragraph(flextable::as_image( 
+              src = flagon::flags("AU"),
+              width = .20, height = .15))
+    ) %>% 
+    
+    flextable::compose( i=~code=="NLD", j = "code",
+             value = flextable::as_paragraph(flextable::as_image( 
+               src = flagon::flags("NL"),
+               width = .20, height = .15))
+    ) %>% 
+    
+    flextable::compose( i=~code=="DEU", j = "code",
+             value = flextable::as_paragraph(flextable::as_image( 
+               src = flagon::flags("DE"),
+               width = .20, height = .15))
+    ) %>% 
+    
+    flextable::compose(i=~code=="FRA", j = "code",
+            value = flextable::as_paragraph(flextable::as_image( 
+              src = flagon::flags("FR"), 
+              width = .20, height = .15))
+    ) %>% 
+    
+    flextable::compose(i=~code=="AUT", j = "code",
+            value = flextable::as_paragraph(flextable::as_image( 
+              src = flagon::flags("AT"), 
+              width = .20, height = .15))
+    ) %>% 
+    
+    flextable::compose(i=~code=="BEL", j = "code",
+            value = flextable::as_paragraph(flextable::as_image( 
+              src = flagon::flags("BE"), 
+              width = .20, height = .15))
+    ) %>% 
+    
+    
+    flextable::compose( i=~code=="CAN", j = "code",
+             value = flextable::as_paragraph(flextable::as_image( 
+               src = flagon::flags("CA"), 
+               width = .20, height = .15))
+    )
+ft
+```
+
+
+```{r }
+# here we replace the duplicated participants column with a minibar
+ft <- ft %>%
+  flextable::compose(j = "n1",   value = flextable::as_paragraph(
+      flextable::minibar(value = participants, barcol = "#930093")
+    ),
+    part = "body") %>% 
+    # here we replace the duplicated measurements column with a minibar
+    flextable::compose(j = "N1",   value = flextable::as_paragraph(
+      flextable::lollipop(rangecol = "white",positivecol ="#930093", value = log(measurements), #log scale is required because there is a large difference in number of measurements between studies
+               min=0, max=log(max(measurements)))
+    ),
+    part = "body")
+ft
+```
+
+
+```{r }
+# here we take out the duplicated years for studies conducted in the same year from the first column
+ft <- ft %>%    
+  flextable::merge_v(part = "body", j = 1:2)
+ft
+```
+
+
+```{r }
+# this next section involves removing duplicated content between rows for the same study
+  
+ ft <- ft %>%   flextable::merge_at(part = "body", i=~Study=="Berkelmans", j = "code") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Berkelmans", j = "setting") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Berkelmans", j = "cnap") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Berkelmans", j = "location") %>% 
+    
+    flextable::merge_at(part = "body", i=~Study=="Lakhal", j = "code") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Lakhal", j = "perc_male") %>%
+    flextable::merge_at(part = "body", i=~Study=="Lakhal", j = "age") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Lakhal", j = "cnap") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Lakhal", j = "group") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Lakhal", j = "setting") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Lakhal", j = "participants") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Lakhal", j = "n1") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Lakhal", j = "measurements") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Lakhal", j = "N1") %>% 
+
+    
+    
+    flextable::merge_at(part = "body", i=~Study=="Ameloot", j = "code") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Ameloot", j = "perc_male") %>%
+    flextable::merge_at(part = "body", i=~Study=="Ameloot", j = "age") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Ameloot", j = "cnap") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Ameloot", j = "group") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Ameloot", j = "setting") %>% 
+
+    
+    flextable::merge_at(part = "body", i=~Study=="Hofhuizen", j = "code") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Hofhuizen", j = "perc_male") %>%
+    flextable::merge_at(part = "body", i=~Study=="Hofhuizen", j = "age") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Hofhuizen", j = "cnap") %>%
+    
+    flextable::merge_at(part = "body", i=~Study=="Hofhuizen", j = "group") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Hofhuizen", j = "setting")  %>% 
+    flextable::merge_at(part = "body", i=~Study=="Hofhuizen", j = "participants") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Hofhuizen", j = "n1") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Hofhuizen", j = "measurements") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Hofhuizen", j = "N1") %>% 
+    
+    flextable::merge_at(part = "body", i=~Study=="Martina", j = "code") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Martina", j = "perc_male") %>%
+    flextable::merge_at(part = "body", i=~Study=="Martina", j = "age") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Martina", j = "cnap") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Martina", j = "group") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Martina", j = "setting")  %>% 
+    flextable::merge_at(part = "body", i=~Study=="Martina", j = "participants") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Martina", j = "n1") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Martina", j = "measurements") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Martina", j = "N1")  %>% 
+    
+    flextable::merge_at(part = "body", i=~Study=="Meidert" & Year==2014, j = "code") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Meidert" & Year==2014, j = "perc_male") %>%
+    flextable::merge_at(part = "body", i=~Study=="Meidert" & Year==2014, j = "age") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Meidert" & Year==2014, j = "group") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Meidert" & Year==2014, j = "setting")  %>% 
+    flextable::merge_at(part = "body", i=~Study=="Meidert" & Year==2014, j = "participants") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Meidert" & Year==2014, j = "n1") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Meidert" & Year==2014, j = "measurements") %>% 
+    flextable::merge_at(part = "body", i=~Study=="Meidert" & Year==2014, j = "N1")
+ft
+```
+
+
+```{r }
+# Apply additional styling for the table in word format
+ft <- ft %>% flextable::fontsize(size = 9) %>% 
+  flextable::font(fontname="Calibri", part = "all") %>%
+  #Add header row for the column sections
+    flextable::add_header_row(values = c("Study","Participants", "Blood pressure measurements"),  
+                   colwidths = c(3, 4 , 6)) %>% 
+    flextable::align(align = "center", part = "header") %>% 
+    flextable::bg(i=1, j=1:3, part="header", bg="#0080ff") %>% 
+    flextable::color(i=1, j=1:3, part="header", color="white") %>% 
+    flextable::bg(i=1, j=4:7, part="header", bg="#ee721a") %>% 
+    flextable::color(i=1, j=4:7, part="header", color="white")  %>% 
+    flextable::bg(i=1, j=8:13, part="header", bg="#930093") %>% 
+    flextable::color(i=1, j=8:13, part="header", color="white")  %>% 
+  #Remove column names that are not required
+    flextable::set_header_labels(Year ="", 
+                      Study = "", 
+                      code = "",  
+                      perc_male = "", 
+                      age= "Age (years)",
+                      group = "",
+                      setting = "",
+                      cnap = "Device",
+                      location = "",
+                      participants = "",
+                      n1 = "Participants",
+                      measurements = "",
+                      N1 = "Measurements") %>% 
+  # remove borders so we can apply only the ones we want
+    flextable::border_remove()  %>%
+  # borders that separate studies in unique years
+    flextable::hline(i =~Year=="2018", part = "body", 
+          border = officer::fp_border(color="black", width = 1)) %>% 
+    
+    flextable::hline( i =~Year=="2016", part = "body", 
+           border = officer::fp_border(color="black", width = 1)) %>% 
+    
+    flextable::hline(i =~Year=="2015", part = "body", 
+          border = officer::fp_border(color="black", width = 1)) %>% 
+    
+    flextable::hline( i =~Year=="2014", part = "body", 
+           border = officer::fp_border(color="black", width = 1)) %>% 
+    
+    flextable::hline(i =~Year=="2013", part = "body", 
+          border = officer::fp_border(color="black", width = 1)) %>% 
+    
+    flextable::hline( i =~Year=="2012", part = "body", 
+           border = officer::fp_border(color="black", width = 1))  %>%
+    flextable::hline( i =~Year=="1994", part = "body", 
+           border = officer::fp_border(color="black", width = 1))  %>% 
+    flextable::hline( i =~Year=="1993", part = "body", 
+           border = officer::fp_border(color="black", width = 1))  %>% 
+  
+  # background colour to emphasise the blood pressure measurements column section
+    flextable::bg(j=10:13, bg="lightgray") %>% 
+    flextable::hline( i =2, part = "header", 
+           border = officer::fp_border(color="black", width = 1)) %>% 
+    flextable::hline_bottom(part = "body", 
+                 border = officer::fp_border(color="black", width = 1))  %>% 
+
+    
+    # width functions to set specific column widths for the word document
+    flextable::width(j="Year",width = 0.45) %>%
+    flextable::width(j="Study",width = 0.87) %>%
+    flextable::width(j="code",width = 0.59)  %>%
+    flextable::width(j="perc_male",width = 1.1)  %>%
+    flextable::width(j="age",width = 0.95) %>%
+    flextable::width(j="group",width = 0.67) %>%
+    flextable::width(j="setting",width = 0.70) %>%
+    flextable::width(j="cnap",width = 0.75) %>%
+    flextable::width(j="location",width = 0.60) %>%
+    flextable::width(j="participants",width = 0.35) %>%
+    flextable::width(j="n1",width = 0.95) %>%
+    flextable::width(j="measurements",width = 0.60) %>%
+    flextable::width(j="N1",width = 1.30) %>%
+  # set height for top row so it has a bit of padding (need hrule set to exact)
+    flextable::height(i=1, height = 0.3, part = "header") %>% 
+    flextable::hrule(i=1, rule = "exact", part = "header") %>% 
+    # footnote for the age column
+    flextable::footnote(i =2, j = 5,
+             value = flextable::as_paragraph(
+               "mean (standard deviation), mean(range)*, mean(interquartile range), median[range]*, or median [interquartile range]"
+             ),
+             ref_symbols = "a",
+             part = "header") %>% 
+   # footnote for the measurements column
+      flextable::footnote(i =2, j ="N1",
+             value = flextable::as_paragraph(
+               "Presented in log scale as there is large difference in the number of measurements between studies"
+             ),
+             ref_symbols = "b",
+             part = "header")
+
+ft
+```
+
+<!--The block comments below are from the officedown package to enable landscape view for the table in the knitted word document. -->
+
+
+<!--BLOCK_LANDSCAPE_START--->
+
+```{r include=TRUE}
+# this final touch adds in the png image as a guide for interpreting the male:female ratio column
+ft <- ft %>%
+  flextable::compose(j = "perc_male",
+            i=2,
+            value = flextable::as_paragraph(flextable::as_image(
+              src = here::here("assets/sex.png"),
+              width = .4, height = .3)),
+            part="header"
+    )
+ft
+ 
+```
+
+<!---BLOCK_LANDSCAPE_STOP--->
+

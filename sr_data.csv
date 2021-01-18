@@ -1,0 +1,22 @@
+study,cnap,location,group,participants,measurements,country,setting,age_loweriqr,age_median,age_upperiqr,female,male,sample,weightkg_median,age_max,age_min,weightkg_max,weightkg_min,age_mean,age_sd,weightkg_mean,weightkg_n,code
+Meidert 2013,T-line,Femoral,primary,23,2879,Germany,ICU,55,60,65,9,14,23,82,NA,NA,NA,NA,NA,NA,NA,NA,DEU
+Greiwe 2018,T-line,Radial,primary,31,27900,Germany,Cardiac Surgery ICU,59,71,76,12,19,31,70,NA,NA,NA,NA,NA,NA,NA,NA,DEU
+Fischer 2012,ClearSight,Radial,primary,44,220,France,Cardiac Surgery ICU,NA,68,NA,15,29,44,75,85,22,120,47,NA,NA,NA,NA,FRA
+Bindra 2016,Finapres,Radial,primary,19,51,Australia,ICU,NA,NA,NA,7,12,19,NA,87,28,NA,NA,62.2,NA,NA,NA,AUS
+Meidert 2014,T-line,Radial,primary,24,2993,Germany,ICU,NA,67,NA,19,15,24,82,77,54,NA,NA,NA,NA,NA,NA,DEU
+Martina 2014,ClearSight,Radial,primary,29,8700,Netherlands,ICU,NA,NA,NA,8,23,31,NA,NA,NA,NA,NA,50,11,76.5,NA,NLD
+Langwieser 2015,T-line,Radial,primary,30,7304,Germany,Cardiac ICU,60,69,77,9,21,30,NA,NA,NA,NA,NA,,NA,NA,75,DEU
+Lakhal 2016,CNAP®,Radial & Femoral,primary,182,546,France,Surgical ICU,NA,NA,NA,42,140,182,NA,NA,NA,NA,NA,64,13,NA,NA,FRA
+Ilies 2015,CNAP®,Radial,primary,104,11222,Germany,Cardiac ICU,NA,NA,NA,84,20,104,NA,NA,NA,NA,NA,68.8,9.4,82,NA,DEU
+Hohn 2013,ClearSight,Radial & Femoral,primary,25,117,Germany,ICU,NA,NA,NA,7,18,25,NA,82,18,NA,NA,63,NA,NA,76,DEU
+Hofhuizen 2014,ClearSight,Radial,primary,20,54,Netherlands,ICU,NA,NA,NA,2,17,20,NA,81,50,NA,NA,67,NA,NA,NA,NLD
+Novak 1994,Finapres,Radial,primary,20,100323,Canada,ICU,NA,NA,NA,2,18,20,NA,78,20,NA,NA,NA,NA,NA,NA,CAN
+Saugel 2013,T-line,Femoral,primary,34,4502,Germany,Medical ICU,51,63,74,11,23,34,80,NA,NA,NA,NA,NA,NA,NA,NA,DEU
+Saugel 2012,T-line,Femoral,primary,28,76826,Germany,Medical ICU,61.5,68,73.5,11,17,28,71,NA,NA,NA,NA,NA,NA,NA,NA,DEU
+Searle 1993,NCAT,Radial,primary,10,300,Canada,Cardiac ICU,NA,NA,NA,3,7,10,NA,NA,NA,NA,NA,60.8,11.7,NA,NA,CAN
+Smolle 2015,CNAP®,Radial,primary,40,7200,Austria,Medical ICU,56,66,72,13,27,40,87,NA,NA,NA,NA,NA,NA,NA,NA,AUT
+Wagner 2015,CNAP®,Femoral,primary,55,4891,Germany,ICU,52,60,71,19,36,55,80,NA,NA,NA,NA,NA,NA,NA,NA,DEU
+Berkelmans 2018,ClearSight,Radial,afib,31,4650,Netherlands,ICU/CCU,NA,NA,NA,12,19,31,NA,NA,NA,NA,NA,74,9,NA,NA,NLD
+Berkelmans 2018,ClearSight,Radial,sr,10,1500,Netherlands,ICU/CCU,NA,NA,NA,4,6,10,NA,NA,NA,NA,NA,64,17,NA,NA,NLD
+Ameloot 2014,ClearSight,Femoral,primary,45,225,Belgium,Medical Surgical Burns ICU,NA,NA,NA,32,32,45,NA,NA,NA,NA,NA,57.6,19.4,NA,NA,BEL
+Ameloot 2014,ClearSight,Radial,primary,17,85,Belgium,Medical Surgical Burns ICU,NA,NA,NA,32,32,45,NA,NA,NA,NA,NA,57.6,19.4,NA,NA,BEL
